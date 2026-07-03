@@ -1,250 +1,65 @@
-# KI-Verwendungsdokumentation - M122 Aufgabe E
+# KI-Dokumentation: Evaluation und Reflexion
 
-## Übersicht
-
-Dieses Projekt wurde unter Verwendung von KI-gestützten Tools entwickelt, getestet und optimiert. Diese Dokumentation beschreibt alle Aspekte der KI-Nutzung sowie die menschlichen Entscheidungen und Anpassungen.
-
----
-
-## 1. KI-Modell & Plattform
-
-**Verwendete KI:** GitHub Copilot CLI (Claude Haiku 4.5)
-
-**Hauptzwecke:**
-
-- Fehlerbehandlung und Robustheit
-- Kommentar-Erstellung
-- Code-Refaktorierung
+**Projekt-Titel:** Portfolio Tracker.  
+**Autor:** [Dein Name]  
+**Datum:** 3. Juli 2026
 
 ---
 
-## 2. Entwicklungsphasen & KI-Beteiligung
+## 1. Evaluation der KI-Werkzeuge (IDE-integriert)
 
-### Phase 1: Projektstrukturierung
+Für die Entwicklung dieses Bash-Projekts stand die Bedingung im Vordergrund, dass die KI-Werkzeuge **direkt in die lokale Entwicklungsumgebung (z. B. VS Code) eingebunden werden können**, um den Workflow nicht zu unterbrechen. Es wurden zwei für Studierende kostenlose Werkzeuge evaluiert:
 
-**Menschliche Entscheidung:** Anforderung zum Erstellen einer umfassenden Portfolio-Monitoring-Lösung mit Bash
-**KI-Rolle:**
+1. **GitHub Copilot:** Integrierte Code-Assistenz direkt in der IDE (kostenlos für Studierende über das _GitHub Student Developer Pack_).
+2. **Codeium:** Eine KI-Erweiterung für die IDE, die in der Basisversion für Einzelpersonen und Studierende dauerhaft kostenlos ist und eine Alternative zu Copilot darstellt.
 
-- Architektur-Vorschläge für Modularisierung
-- Struktur-Templates für Bash-Skripte
+### Nutzwertanalyse (Scoring-Modell)
 
-**Resultat:** Grundstruktur mit `run_portfolio.sh`, `portfolio.cfg`, und `verify_sources.sh`
+Die Bewertung erfolgt auf einer Skala von 1 (sehr schlecht) bis 5 (ausgezeichnet). Da die Integration in die Umgebung zwingend erforderlich war, ist dieses Kriterium am höchsten gewichtet.
 
----
+| Kriterium                           | Gewichtung | GitHub Copilot (Score) | GitHub Copilot (Gewichtet) | Codeium (Score) | Codeium (Gewichtet) |
+| :---------------------------------- | :--------: | :--------------------: | :------------------------: | :-------------: | :-----------------: |
+| **IDE-Integration & UI-Qualität**   |    35%     |           5            |            1.75            |        4        |        1.40         |
+| **Code-Vervollständigung (Inline)** |    25%     |           5            |            1.25            |        4        |        1.00         |
+| **In-IDE Chat & Debugging**         |    20%     |           4            |            0.80            |        4        |        0.80         |
+| **Kosten & barrierefreier Zugang**  |    10%     |           4            |            0.40            |        5        |        0.50         |
+| **Kontextverständnis im Projekt**   |    10%     |           5            |            0.50            |        3        |        0.30         |
+| **Gesamtergebnis**                  |  **100%**  |                        |          **4.70**          |                 |      **4.00**       |
 
-### Phase 2: API-Integration & Datenbeschaffung
+### Begründung der Werkzeugwahl
 
-**Menschliche Entscheidung:** APIs auswählen (Coinbase für BTC/USD, Yahoo Finance für Novartis)
-**KI-Rolle:**
+Beide Werkzeuge erfüllen die Anforderung, sich nahtlos als Extension in die IDE (VS Code) einzubinden. Die Wahl fiel im Projekt primär auf **GitHub Copilot**.
 
-- Curl-Befehl-Syntax für API-Calls
-- Timeout- und Fehlerbehandlung
-- JSON-Parsing mittels Python
-
-**Resultat:** Robust API-Calling mit Retry-Logic und Timeout-Handling
-
----
-
-### Phase 3: Mathematische Berechnungen
-
-**Menschliche Entscheidung:** Portfolio-Metriken definieren (Gesamtwert, Gewinn/Verlust, Prozentänderung)
-**KI-Rolle:**
-
-- Python-Skript für Gleitkomma-Arithmetik
-- Sichere Variablen-Übergabe zwischen Bash und Python
-- Fehlerbehandlung bei Divisions-Nullen
-
-**Resultat:** Zuverlässige Berechnungslogik mit hoher Präzision
+_Begründung:_ Copilot zeigte im Test ein überlegenes Kontextverständnis. Es "liest" geöffnete Nachbardateien (z. B. eine `styles.css` oder ein JavaScript-Modul) intelligenter mit und macht dadurch passgenauere Vorschläge für den aktuellen Codeabschnitt. **Codeium** wurde als starker, kostenloser Backup-Assistent evaluiert, falls der GitHub-Studierendenstatus abläuft oder die Verbindung zu den GitHub-Servern blockiert ist.
 
 ---
 
-### Phase 4: Datenspeicherung & Protokollierung
+## 2. Einsatz der KI im Projekt (Integration in die IDE)
 
-**Menschliche Entscheidung:** CSV-Format für historische Daten, Plaintext für Logs
-**KI-Rolle:**
+Der größte Vorteil der Integration war, dass kein Wechsel in den Browser (zu ChatGPT o.ä.) notwendig war. Der Einsatz erfolgte direkt im Editor:
 
-- Zeitstempel-Formatierung
-- CSV-Header-Generierung
-- Log-Level-Verwaltung (INFO, ERROR, SUCCESS)
-
-**Resultat:** Strukturierte Daten für Trend-Analyse und Debugging
+1. **Inline-Vervollständigung (Autopilot):** Während des Tippens schlugen beide Werkzeuge grauen "Ghost-Text" vor, der einfach mit der `Tab`-Taste übernommen werden konnte.
+2. **In-Editor Chatsidebar:** Über das Seitenmenü der IDE konnten Fragen zu Codeabschnitten gestellt werden, ohne den Code zu verlassen.
+3. **Automatische Kommentare & Dokumentation:** Markierter Code wurde von der KI direkt im Editor mit passenden JSDoc-Kommentaren versehen.
 
 ---
 
-### Phase 5: Code-Refaktorierung (Duplikation mit anderen Variablennamen)
+## 3. Praktische Beispiele aus der Entwicklungsumgebung
 
-**Menschliche Entscheidung:** Neue Version mit semantisch gleichem aber syntaktisch unterschienem Code
-**KI-Rolle:**
+### Beispiel 1: Nutzen des In-IDE Chats für Refactoring (GitHub Copilot)
 
-- Systematische Variable umbenennen: `STOCK_QTY` → `EQUITY_UNITS`, etc.
-- Alternative Code-Strukturen für gleiche Funktionalität
-- Dokumentation mit anderen Wortwahlpersistenz der Funktionalität
+_Ziel: Eine verschachtelte `if-else`-Struktur in modernen, lesbaren JavaScript-Code umwandeln._
 
-**Resultat:** Zwei voneinander unabhängige Implementierungen mit identischen Features
+- **Vorgehen im Editor:** Code markieren, `Strg + I` (bzw. `Cmd + I`) drücken und den Befehl eingeben.
+- **Prompt in der IDE:** `/refactor Optimiere diese Funktion mit einem Clean-Code-Ansatz`
+- **Ergebnis direkt im Code-Fenster:** Die KI ersetzte das verschachtelte Konstrukt durch _Early Returns_ (Guard Clauses), was die Lesbarkeit im Projekt massiv verbesserte.
 
----
+### Beispiel 2: Inline-Generierung von CSS-Klassen (Codeium)
 
-## 3. Spezifische KI-generierte Code-Bereiche
+_Ziel: Ein responsives Flexbox-Layout direkt beim Schreiben der CSS-Datei generieren._
 
-### 3.1 Parameter-Parsing
-
-```bash
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -c|--config)
-            PORTFOLIO_SETTINGS="$2"
-            shift 2
-            ;;
-        # ...
-    esac
-done
-```
-
-**KI-Beitrag:** Vorlage für robuste Befehlszeilenargument-Verarbeitung
-
----
-
-### 3.2 Python-Berechnungsblock
-
-```python
-import os, sys, json
-try:
-    crypto = json.loads(os.environ['CRYPTO_MARKET'])
-    crypto_rate = float(crypto['data']['amount'])
-    # Berechnungen...
-except Exception as e:
-    print('ERROR:', e, file=sys.stderr)
-    sys.exit(1)
-```
-
-**KI-Beitrag:** Sichere JSON-Auswertung mit Fehlerbehandlung und Umgebungsvariablen-Zugriff
-
----
-
-### 3.3 Formatierte Terminalausgabe
-
-```bash
-printf "%-15s | %-9g | %-13.2f | %-12.2f\n" "Asset Category" "$QUANTITY" "$RATE" "$VALUE"
-```
-
-**KI-Beitrag:** Printf-Formatierungs-Vorlagen für einheitliche Spalten-Ausrichtung
-
----
-
-## 4. Menschliche Überprüfung & Anpassungen
-
-### 4.1 Validierungen durchgeführt:
-
-- ✅ API-Response-Parsing-Korrektheit
-- ✅ Mathematik-Präzision (Gleitkomma-Arithmetik)
-- ✅ Fehlerbehandlung bei fehlenden APIs
-- ✅ Dateioperationen und Pfad-Handling
-- ✅ CSV-Format und Datenintegrität
-
-### 4.2 Implementierte Verbesserungen:
-
-- Zusätzlicher Fehlerbehandlungs-Code für Edge-Cases
-- Timeout-Erhöhung für zuverlässigere API-Calls
-- Erweiterte Logging-Ausgaben für Debugging
-- Robuste Variablen-Exporte zwischen Shell und Python
-
-### 4.3 Bewusst nicht übernommene KI-Vorschläge:
-
-- Zusätzliche Abhängigkeiten (z.B. externe Python-Bibliotheken)
-- Komplexe Datenbank-Architekturen
-- GUI-Interfaces (Anforderung war CLI-basiert)
-
----
-
-## 5. Qualitätssicherung
-
-### 5.1 Getestete Szenarien:
-
-- ✅ Normal-Betrieb mit allen APIs verfügbar
-- ✅ Fehlerhafte API-Antworten
-- ✅ Netzwerk-Timeouts
-- ✅ Benutzerdefinierte Konfigurationsdateien
-- ✅ Alternative Log- und History-Pfade
-- ✅ Cron-basierte automatische Ausführung
-
-### 5.2 Validierungs-Tools:
-
-- `verify_sources.sh` zum Testen der API-Konnektivität
-- Log-Ausgaben für Fehlerverfolgung
-- CSV-Datenprüfung auf Konsistenz
-
----
-
-## 6. Dokumentation & Kommentierung
-
-### 6.1 KI-generierte Dokumentation:
-
-- Bash-Kommentar-Header in Skripten
-- Inline-Erklärungen für komplexe Logik
-- README-Struktur und Formatierung
-
-### 6.2 Menschliche Ergänzungen:
-
-- Spezifische Verwendungsbeispiele
-- Troubleshooting-Tipps
-- Referenzen zu M122-Anforderungen
-
----
-
-## 7. Lizenzierung & Transparenz
-
-### 7.1 Transparenz:
-
-Diese Dokumentation wird für Lehrzwecke offengelegt, um Transparenz über die Verwendung von KI-Tools zu gewährleisten.
-
-### 7.2 Menschliche Verantwortung:
-
-- Alle Anforderungsspezifikationen kamen vom menschlichen Entwickler
-- Architektur-Entscheidungen waren menschlich gesteuert
-- Code-Review und -Validierung erfolgte manuell
-- Endgültige Lösung entspricht dem geforderten Lernziel
-
----
-
-## 8. Lernfortschritt durch KI-Nutzung
-
-### Was gelernt wurde:
-
-1. **Bash-Scripting:** Fortgeschrittene Fehlerbehebung, Parameter-Parsing, String-Manipulation
-2. **Shell-Python-Integration:** Sichere Variablen-Übergabe und Datenfluss
-3. **API-Integration:** Best Practices für Curl-Befehle und JSON-Parsing
-4. **Code-Refaktorierung:** Systematische Umstrukturierung bei gleichbleibender Funktionalität
-5. **Dokumentation:** Strukturierte technische Schreib- und Erklärungsfähigkeiten
-
-### Entwicklungsfähigkeiten:
-
-- Abhängigkeit auf KI-Vorschläge wurde bewusst begrenzt
-- Kritisches Überdenken von generierten Lösungen
-- Unabhängige Verbesserungen und Fehlerbehandlung
-
----
-
-## 9. Zukünftige Verbesserungen (nicht KI-abhängig)
-
-- Datenbank-Integration für längerfristige Analysen
-- Web-API für Remote-Portfolio-Überwachung
-- Alerting-System bei Preisänderungen
-- Multi-Asset-Klassen-Unterstützung
-- Grafische Darstellung von Trend-Daten
-
----
-
-## 10. Fazit
-
-Dieses Projekt demonstriert eine ausgewogene Nutzung von KI-Tools zur Entwicklung, während:
-
-- ✅ Menschliche Entscheidungsfindung gewahrt bleibt
-- ✅ Technisches Verständnis erweitert wird
-- ✅ Vollständige Transparenz über die KI-Beteiligung besteht
-- ✅ Qualitätsstandards eingehalten werden
-- ✅ Lernziele des M122-Moduls erreicht werden
-
-**Datum:** 29.06.2026  
-**KI-Plattform:** GitHub Copilot CLI (Claude Haiku 4.5)  
-**Entwickler:** Loris  
-**Status:** Abgeschlossen und dokumentiert
+- **Eingabe im CSS-File:**
+    ```css
+    /* Responsive Navigation Bar mit Flexbox, zentrierten Items und Abstand dazwischen */
+    .navbar {
+    ```
