@@ -23,21 +23,6 @@ for tool in curl jq awk; do
   fi
 done
 
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
-
-if [ "$HTTP_STATUS" -ne 200 ]; then
-  echo "Error: API request failed with status code $HTTP_STATUS" >&2
-  exit 1
-fi
-
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://query1.finance.yahoo.com/v8/finance/chart/NOVN.SW?interval=1d&range=1d")
-
-if [ "$HTTP_STATUS" -ne 200 ]; then
-  echo "Error: API request failed with status code $HTTP_STATUS" >&2
-  exit 1
-fi
-
-
 # Line 26 - 46 wurde mit ai geschrieben
 CRYPTO_JSON=$(curl -s "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
 BTC_RATE=$(echo "$CRYPTO_JSON" | jq -r '.data.amount')
