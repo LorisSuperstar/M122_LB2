@@ -3,21 +3,25 @@
 # Testskript fuer die Kursdaten-APIs (BTC, USD, NOVN)
 # M122 LB2 - Aufgabe D (Verifikation)
 # 
-# HINWEIS: Dieses Skript wurde mit Unterstuetzung des KI-Tutors
-# (Google DeepMind Antigravity) generiert, getestet und verifiziert.
+# Zweck:  Sicherstellen, dass die APIs erreichbar sind und gueltige Werte liefern.
+# Input:  Keine (Daten werden live von Web-APIs bezogen)
+# Output: Konsolenausgabe der aktuellen Kurse
 # ==============================================================================
 
-# Fetch BTC-CHF
-BTC_RAW=$(curl -s "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
-BTC_PRICE=$(echo "$BTC_RAW" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['amount'])")
+# Abschnittskommentar: BTC-CHF Kurs abfragen
+# WOZU: Testen der Coinbase API fuer Bitcoin.
+sBtcRaw=$(curl -s "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
+dBitcoinPrice=$(echo "$sBtcRaw" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['amount'])")
 
-# Fetch USD-CHF
-USD_RAW=$(curl -s "https://api.coinbase.com/v2/prices/USD-CHF/spot")
-USD_PRICE=$(echo "$USD_RAW" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['amount'])")
+# Abschnittskommentar: USD-CHF Kurs abfragen
+# WOZU: Testen der Coinbase API fuer US-Dollar.
+sUsdRaw=$(curl -s "https://api.coinbase.com/v2/prices/USD-CHF/spot")
+dUsdPrice=$(echo "$sUsdRaw" | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['amount'])")
 
-# Fetch NOVN.SW (Novartis on SIX)
-NOVN_RAW=$(curl -s -H "User-Agent: Mozilla/5.0" "https://query1.finance.yahoo.com/v8/finance/chart/NOVN.SW?interval=1d&range=1d")
-NOVN_PRICE=$(echo "$NOVN_RAW" | python3 -c "
+# Abschnittskommentar: NOVN.SW Kurs abfragen
+# WOZU: Testen der Yahoo Finance API fuer Novartis Aktien.
+sNovnRaw=$(curl -s -H "User-Agent: Mozilla/5.0" "https://query1.finance.yahoo.com/v8/finance/chart/NOVN.SW?interval=1d&range=1d")
+dNovartisPrice=$(echo "$sNovnRaw" | python3 -c "
 import sys, json
 try:
     data = json.load(sys.stdin)
@@ -31,6 +35,8 @@ except Exception as e:
     print('Error:', e)
 ")
 
-echo "BTC/CHF: $BTC_PRICE"
-echo "USD/CHF: $USD_PRICE"
-echo "NOVN/CHF: $NOVN_PRICE"
+# Abschnittskommentar: Ausgabe der Testergebnisse
+# WOZU: Um visuell zu ueberpruefen, ob die abgerufenen Daten korrekt sind.
+echo "BTC/CHF: $dBitcoinPrice"
+echo "USD/CHF: $dUsdPrice"
+echo "NOVN/CHF: $dNovartisPrice"

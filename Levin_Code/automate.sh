@@ -3,22 +3,31 @@
 # Zentrales Automationsscript fuer das Aktuelle Wertschriften-Depot
 # M122 LB2 - Aufgabe D
 # 
-# HINWEIS: Dieses Skript wurde mit Unterstuetzung des KI-Tutors
-# (Google DeepMind Antigravity) generiert, getestet und verifiziert.
+# Zweck:  Automatisierte Abfrage von Kursdaten, Berechnung der Depotwerte 
+#         und Protokollierung.
+# Input:  depot.cfg (Bestaende und historische Kaufpreise), Parameter (Optionen)
+# Output: depot.log (Protokoll), depot_history.csv (Werteverlauf), 
+#         data.zip (Rohdaten), info.mail (Benachrichtigung), Terminalausgabe.
 # ==============================================================================
 
-# Setup script directory to allow running from anywhere (e.g. cron)
+# WOZU: Skript-Verzeichnis ermitteln, damit relative Pfade robust funktionieren.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Default file paths
+# Konstanten Definitionen (GROSS_CONST)
 CONFIG_FILE="$SCRIPT_DIR/depot.cfg"
-LOG_FILE=""
-HISTORY_FILE=""
 ZIP_FILE="$SCRIPT_DIR/data.zip"
 MAIL_FILE="$SCRIPT_DIR/info.mail"
 
-# Usage help menu
-show_help() {
+# Variablen fuer dynamische Pfade (s... fuer String gemäss TBZ-Konvention)
+sLogFile=""
+sHistoryFile=""
+
+# ==============================================================================
+# Zweck:  Zeigt das Hilfemenue auf dem Terminal an.
+# Input:  Keine
+# Output: Text auf Standardausgabe
+# ==============================================================================
+showHelp() {
     echo "Usage: $0 [options]"
     echo "Options:"
     echo "  -c, --config <file>     Path to custom configuration file"
@@ -28,7 +37,8 @@ show_help() {
     exit 0
 }
 
-# Parse command line options
+# Abschnittskommentar: Kommandozeilenargumente parsen
+# WOZU: Um benutzerdefinierte Pfade fuer Config, Log und History zu uebernehmen.
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -c|--config)
@@ -36,24 +46,25 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -l|--log)
-            LOG_FILE="$2"
+            sLogFile="$2"
             shift 2
             ;;
         -s|--history)
-            HISTORY_FILE="$2"
+            sHistoryFile="$2"
             shift 2
             ;;
         -h|--help)
-            show_help
+            showHelp
             ;;
         *)
             echo "Unknown option: $1" >&2
-            show_help
+            showHelp
             ;;
     esac
 done
 
-# Load configuration file
+# Abschnittskommentar: Konfiguration laden
+# WOZU: Einlesen der Depot-Bestaende aus der Config-Datei.
 if [ -f "$CONFIG_FILE" ]; then
     source "$CONFIG_FILE"
 else
@@ -61,155 +72,166 @@ else
     exit 1
 fi
 
-# Resolve log and history file destinations
-LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/depot.log}"
-HISTORY_FILE="${HISTORY_FILE:-$SCRIPT_DIR/depot_history.csv}"
+# Fallback auf Standardpfade, falls keine ueber Parameter gesetzt wurden
+sLogFile="${sLogFile:-$SCRIPT_DIR/depot.log}"
+sHistoryFile="${sHistoryFile:-$SCRIPT_DIR/depot_history.csv}"
 
-# Helper function to append to log file
-log_msg() {
-    local level="$1"
-    local msg="$2"
-    echo "$(date +"%Y-%m-%d %H:%M:%S") [$level] $msg" >> "$LOG_FILE"
+# ==============================================================================
+# Zweck:  Schreibt eine Nachricht mit Zeitstempel in das Logfile.
+# Input:  $1: sLevel (Loglevel, z.B. INFO, ERROR)
+#         $2: sMessage (Die eigentliche Nachricht)
+# Output: Zeile in der Log-Datei
+# ==============================================================================
+logMessage() {
+    local sLevel="$1"
+    local sMessage="$2"
+    # WOZU: Einfache Protokollierung der Skriptaktivitaeten fuer die Nachverfolgung
+    echo "$(date +"%Y-%m-%d %H:%M:%S") [$sLevel] $sMessage" >> "$sLogFile"
 }
 
-log_msg "INFO" "Starting Wertschriften-Depot run."
+logMessage "INFO" "Starting Wertschriften-Depot run."
 
-# Fetch Bitcoin rate
-log_msg "INFO" "Fetching Bitcoin rate from Coinbase API..."
-BTC_RAW=$(curl -s --connect-timeout 10 --max-time 15 "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
-if [ $? -ne 0 ] || [ -z "$BTC_RAW" ]; then
-    log_msg "ERROR" "Failed to fetch Bitcoin rate."
+# Abschnittskommentar: Datenabfrage ueber APIs
+# WOZU: Die aktuellen Kurse werden von den konfigurierten APIs abgerufen.
+
+logMessage "INFO" "Fetching Bitcoin rate from Coinbase API..."
+sBtcRaw=$(curl -s --connect-timeout 10 --max-time 15 "https://api.coinbase.com/v2/prices/BTC-CHF/spot")
+if [ $? -ne 0 ] || [ -z "$sBtcRaw" ]; then
+    logMessage "ERROR" "Failed to fetch Bitcoin rate."
     echo "Error: Failed to fetch Bitcoin rate." >&2
     exit 1
 fi
 
-# Fetch USD rate
-log_msg "INFO" "Fetching USD rate from Coinbase API..."
-USD_RAW=$(curl -s --connect-timeout 10 --max-time 15 "https://api.coinbase.com/v2/prices/USD-CHF/spot")
-if [ $? -ne 0 ] || [ -z "$USD_RAW" ]; then
-    log_msg "ERROR" "Failed to fetch USD rate."
+logMessage "INFO" "Fetching USD rate from Coinbase API..."
+sUsdRaw=$(curl -s --connect-timeout 10 --max-time 15 "https://api.coinbase.com/v2/prices/USD-CHF/spot")
+if [ $? -ne 0 ] || [ -z "$sUsdRaw" ]; then
+    logMessage "ERROR" "Failed to fetch USD rate."
     echo "Error: Failed to fetch USD rate." >&2
     exit 1
 fi
 
-# Fetch Novartis rate
-log_msg "INFO" "Fetching Novartis rate from Yahoo Finance..."
-NOVN_RAW=$(curl -s -H "User-Agent: Mozilla/5.0" --connect-timeout 10 --max-time 15 "https://query1.finance.yahoo.com/v8/finance/chart/NOVN.SW?interval=1d&range=1d")
-if [ $? -ne 0 ] || [ -z "$NOVN_RAW" ]; then
-    log_msg "ERROR" "Failed to fetch Novartis rate."
+logMessage "INFO" "Fetching Novartis rate from Yahoo Finance..."
+sNovnRaw=$(curl -s -H "User-Agent: Mozilla/5.0" --connect-timeout 10 --max-time 15 "https://query1.finance.yahoo.com/v8/finance/chart/NOVN.SW?interval=1d&range=1d")
+if [ $? -ne 0 ] || [ -z "$sNovnRaw" ]; then
+    logMessage "ERROR" "Failed to fetch Novartis rate."
     echo "Error: Failed to fetch Novartis rate." >&2
     exit 1
 fi
 
-# Pack raw files to data.zip using python zipfile module (since zip package is not installed)
-TEMP_DIR=$(mktemp -d)
-echo "$BTC_RAW" > "$TEMP_DIR/btc.raw"
-echo "$USD_RAW" > "$TEMP_DIR/usd.raw"
-echo "$NOVN_RAW" > "$TEMP_DIR/novn.raw"
-python3 -c "import zipfile; z = zipfile.ZipFile('$ZIP_FILE', 'w'); z.write('$TEMP_DIR/btc.raw', 'btc.raw'); z.write('$TEMP_DIR/usd.raw', 'usd.raw'); z.write('$TEMP_DIR/novn.raw', 'novn.raw'); z.close()"
-rm -rf "$TEMP_DIR"
-log_msg "INFO" "Raw data zipped to $ZIP_FILE"
+# Abschnittskommentar: Archivierung der Rohdaten
+# WOZU: Um die JSON-Responses bei Fehlern analysieren zu koennen.
+sTempDir=$(mktemp -d)
+echo "$sBtcRaw" > "$sTempDir/btc.raw"
+echo "$sUsdRaw" > "$sTempDir/usd.raw"
+echo "$sNovnRaw" > "$sTempDir/novn.raw"
+python3 -c "import zipfile; z = zipfile.ZipFile('$ZIP_FILE', 'w'); z.write('$sTempDir/btc.raw', 'btc.raw'); z.write('$sTempDir/usd.raw', 'usd.raw'); z.write('$sTempDir/novn.raw', 'novn.raw'); z.close()"
+rm -rf "$sTempDir"
+logMessage "INFO" "Raw data zipped to $ZIP_FILE"
 
-# Export values to OS environment for safe access inside Python block
-export BTC_RAW USD_RAW NOVN_RAW
+# Variablen an Umgebung uebergeben fuer Python-Skript
+export sBtcRaw sUsdRaw sNovnRaw
 export STOCK_QTY STOCK_HIST_CHF USD_QTY USD_HIST_CHF BTC_QTY BTC_HIST_CHF
 
-# Run calculations in Python to handle JSON parsing and floating-point arithmetic accurately
-CALC_RESULTS=$(python3 -c "
+# Abschnittskommentar: Berechnungen mittels Python
+# WOZU: Python kann JSON einfach verarbeiten und rechnet mit Fliesskommazahlen genauer.
+sCalcResults=$(python3 -c "
 import os, sys, json
 try:
-    btc = json.loads(os.environ['BTC_RAW'])
-    usd = json.loads(os.environ['USD_RAW'])
-    novn = json.loads(os.environ['NOVN_RAW'])
+    btcData = json.loads(os.environ['sBtcRaw'])
+    usdData = json.loads(os.environ['sUsdRaw'])
+    novnData = json.loads(os.environ['sNovnRaw'])
 
-    btc_p = float(btc['data']['amount'])
-    usd_p = float(usd['data']['amount'])
+    dBitcoinPrice = float(btcData['data']['amount'])
+    dUsdPrice = float(usdData['data']['amount'])
 
-    meta = novn['chart']['result'][0]['meta']
-    novn_p = meta.get('regularMarketPrice')
-    if novn_p is None:
-        novn_p = novn['chart']['result'][0]['indicators']['quote'][0]['close'][-1]
-    novn_p = float(novn_p)
+    novnMeta = novnData['chart']['result'][0]['meta']
+    dNovartisPrice = novnMeta.get('regularMarketPrice')
+    if dNovartisPrice is None:
+        dNovartisPrice = novnData['chart']['result'][0]['indicators']['quote'][0]['close'][-1]
+    dNovartisPrice = float(dNovartisPrice)
 
-    stock_q = float(os.environ['STOCK_QTY'])
-    usd_q = float(os.environ['USD_QTY'])
-    btc_q = float(os.environ['BTC_QTY'])
+    dStockQuantity = float(os.environ['STOCK_QTY'])
+    dUsdQuantity = float(os.environ['USD_QTY'])
+    dBitcoinQuantity = float(os.environ['BTC_QTY'])
 
-    stock_h = float(os.environ['STOCK_HIST_CHF'])
-    usd_h = float(os.environ['USD_HIST_CHF'])
-    btc_h = float(os.environ['BTC_HIST_CHF'])
+    dStockHistorical = float(os.environ['STOCK_HIST_CHF'])
+    dUsdHistorical = float(os.environ['USD_HIST_CHF'])
+    dBitcoinHistorical = float(os.environ['BTC_HIST_CHF'])
 
-    stock_v = stock_q * novn_p
-    usd_v = usd_q * usd_p
-    btc_v = btc_q * btc_p
+    dStockValue = dStockQuantity * dNovartisPrice
+    dUsdValue = dUsdQuantity * dUsdPrice
+    dBitcoinValue = dBitcoinQuantity * dBitcoinPrice
 
-    curr_total = stock_v + usd_v + btc_v
-    hist_total = stock_h + usd_h + btc_h
-    p_l = curr_total - hist_total
-    pct = (p_l / hist_total) * 100 if hist_total != 0 else 0.0
+    dCurrentTotal = dStockValue + dUsdValue + dBitcoinValue
+    dHistoricalTotal = dStockHistorical + dUsdHistorical + dBitcoinHistorical
+    dProfitLoss = dCurrentTotal - dHistoricalTotal
+    dPercentChange = (dProfitLoss / dHistoricalTotal) * 100 if dHistoricalTotal != 0 else 0.0
 
-    print(f'{btc_p:.2f} {usd_p:.4f} {novn_p:.2f} {stock_v:.2f} {usd_v:.2f} {btc_v:.2f} {curr_total:.2f} {hist_total:.2f} {p_l:.2f} {pct:.2f}')
+    print(f'{dBitcoinPrice:.2f} {dUsdPrice:.4f} {dNovartisPrice:.2f} {dStockValue:.2f} {dUsdValue:.2f} {dBitcoinValue:.2f} {dCurrentTotal:.2f} {dHistoricalTotal:.2f} {dProfitLoss:.2f} {dPercentChange:.2f}')
 except Exception as e:
     print('ERROR:', e, file=sys.stderr)
     sys.exit(1)
-" 2>>"$LOG_FILE")
+" 2>>"$sLogFile")
 
-if [ $? -ne 0 ] || [ -z "$CALC_RESULTS" ]; then
-    log_msg "ERROR" "Failed to parse API data or run calculations."
-    echo "Error: Calculation failed. See $LOG_FILE for details." >&2
+if [ $? -ne 0 ] || [ -z "$sCalcResults" ]; then
+    logMessage "ERROR" "Failed to parse API data or run calculations."
+    echo "Error: Calculation failed. See $sLogFile for details." >&2
     exit 1
 fi
 
-# Read calculated values into Bash variables
-read -r btc_price usd_price novn_price stock_val usd_val btc_val curr_total hist_total profit_loss pct_change <<< "$CALC_RESULTS"
+# Werte aus Python-Ausgabe in Bash-Variablen uebernehmen
+read -r dBitcoinPrice dUsdPrice dNovartisPrice dStockValue dUsdValue dBitcoinValue dCurrentTotal dHistoricalTotal dProfitLoss dPercentChange <<< "$sCalcResults"
 
-log_msg "INFO" "Calculation successful. Total: $curr_total CHF, Profit: $profit_loss CHF ($pct_change%)"
+logMessage "INFO" "Calculation successful. Total: $dCurrentTotal CHF, Profit: $dProfitLoss CHF ($dPercentChange%)"
 
-# Write history to CSV (creates file and header if not present)
-if [ ! -f "$HISTORY_FILE" ]; then
-    echo "Date,Time,BTC_Price_CHF,USD_Price_CHF,NOVN_Price_CHF,STOCK_Val_CHF,USD_Val_CHF,BTC_Val_CHF,Total_Current_Val_CHF,Total_Hist_Val_CHF,Profit_Loss_CHF,Pct_Change" > "$HISTORY_FILE"
+# Abschnittskommentar: Historie speichern (CSV)
+# WOZU: Langfristige Aufzeichnung der Portfolio-Entwicklung.
+if [ ! -f "$sHistoryFile" ]; then
+    echo "Date,Time,BTC_Price_CHF,USD_Price_CHF,NOVN_Price_CHF,STOCK_Val_CHF,USD_Val_CHF,BTC_Val_CHF,Total_Current_Val_CHF,Total_Hist_Val_CHF,Profit_Loss_CHF,Pct_Change" > "$sHistoryFile"
 fi
-DATE_STR=$(date +"%Y-%m-%d")
-TIME_STR=$(date +"%H:%M:%S")
-echo "$DATE_STR,$TIME_STR,$btc_price,$usd_price,$novn_price,$stock_val,$usd_val,$btc_val,$curr_total,$hist_total,$profit_loss,$pct_change" >> "$HISTORY_FILE"
+sDateString=$(date +"%Y-%m-%d")
+sTimeString=$(date +"%H:%M:%S")
+echo "$sDateString,$sTimeString,$dBitcoinPrice,$dUsdPrice,$dNovartisPrice,$dStockValue,$dUsdValue,$dBitcoinValue,$dCurrentTotal,$dHistoricalTotal,$dProfitLoss,$dPercentChange" >> "$sHistoryFile"
 
-# Determine prefix sign for display
-if [[ "$profit_loss" == -* ]]; then
-    SIGN=""
+# Vorzeichen ermitteln
+if [[ "$dProfitLoss" == -* ]]; then
+    sSign=""
 else
-    SIGN="+"
+    sSign="+"
 fi
 
-# Write mock email report to admin (info.mail)
+# Abschnittskommentar: Admin-Benachrichtigung generieren
+# WOZU: Eine simulierte Mail wird geschrieben, um den Status extern zu kommunizieren.
 cat <<EOF > "$MAIL_FILE"
 To: admin@company.com
-Subject: Depot Status Update ($DATE_STR $TIME_STR)
+Subject: Depot Status Update ($sDateString $sTimeString)
 
 Depot Status Report:
-- Current Value: $curr_total CHF
-- Historical Cost: $hist_total CHF
-- Net Performance: $SIGN$profit_loss CHF ($SIGN$pct_change%)
+- Current Value: $dCurrentTotal CHF
+- Historical Cost: $dHistoricalTotal CHF
+- Net Performance: $sSign$dProfitLoss CHF ($sSign$dPercentChange%)
 
 Breakdown:
-- Novartis Stock (10 Shares): $stock_val CHF (Price: $novn_price CHF)
-- USD Cash (3000 USD): $usd_val CHF (Price: $usd_price CHF)
-- Bitcoin (0.1 BTC): $btc_val CHF (Price: $btc_price CHF)
+- Novartis Stock (10 Shares): $dStockValue CHF (Price: $dNovartisPrice CHF)
+- USD Cash (3000 USD): $dUsdValue CHF (Price: $dUsdPrice CHF)
+- Bitcoin (0.1 BTC): $dBitcoinValue CHF (Price: $dBitcoinPrice CHF)
 
 Log file and CSV history updated.
 EOF
-log_msg "INFO" "Mock email updated in $MAIL_FILE"
+logMessage "INFO" "Mock email updated in $MAIL_FILE"
 
-# Print beautiful terminal summary
+# Abschnittskommentar: Terminal Zusammenfassung
+# WOZU: Dem Benutzer beim manuellen Ausfuehren einen schoenen Ueberblick geben.
 echo "=================================================="
-echo "WERT-DEPOT TRACKER SUMMARY ($DATE_STR $TIME_STR)"
+echo "WERT-DEPOT TRACKER SUMMARY ($sDateString $sTimeString)"
 echo "=================================================="
 printf "%-15s | %-9s | %-13s | %-12s\n" "Asset Class" "Qty" "Price (CHF)" "Value (CHF)"
 echo "----------------+-----------+---------------+------------"
-printf "%-15s | %-9g | %-13.2f | %-12.2f\n" "Novartis Stock" "$STOCK_QTY" "$novn_price" "$stock_val"
-printf "%-15s | %-9g | %-13.4f | %-12.2f\n" "USD Cash" "$USD_QTY" "$usd_price" "$usd_val"
-printf "%-15s | %-9g | %-13.2f | %-12.2f\n" "Bitcoin Crypto" "$BTC_QTY" "$btc_price" "$btc_val"
+printf "%-15s | %-9g | %-13.2f | %-12.2f\n" "Novartis Stock" "$STOCK_QTY" "$dNovartisPrice" "$dStockValue"
+printf "%-15s | %-9g | %-13.4f | %-12.2f\n" "USD Cash" "$USD_QTY" "$dUsdPrice" "$dUsdValue"
+printf "%-15s | %-9g | %-13.2f | %-12.2f\n" "Bitcoin Crypto" "$BTC_QTY" "$dBitcoinPrice" "$dBitcoinValue"
 echo "----------------+-----------+---------------+------------"
-printf "Current Portfolio Value:  %12.2f CHF\n" "$curr_total"
-printf "Historical Purchase Cost: %12.2f CHF\n" "$hist_total"
-printf "Net Profit/Loss:         %12.2f CHF (%s%.2f%%)\n" "$profit_loss" "$SIGN" "$pct_change"
+printf "Current Portfolio Value:  %12.2f CHF\n" "$dCurrentTotal"
+printf "Historical Purchase Cost: %12.2f CHF\n" "$dHistoricalTotal"
+printf "Net Profit/Loss:         %12.2f CHF (%s%.2f%%)\n" "$dProfitLoss" "$sSign" "$dPercentChange"
 echo "=================================================="
