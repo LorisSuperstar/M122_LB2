@@ -22,3 +22,7 @@ Ich habe Ai gefragt was ich alles für Variablen brauchen werde, da ich am anfan
 ## jq
 
 Ich wusste nicht womit ich die Json dateie verarbeite die ich von den Api's bekomme. Ai hat mir jq empfohlen.
+
+## portfolio.cfg
+
+Ich weusste nicht wie man so etwas am besten macht, ai hat mir dann gezeigt was der source befehl macht. Die Logik habe ich aber selber geschrieben
