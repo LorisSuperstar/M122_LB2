@@ -4,17 +4,7 @@ Jeder Feature-Schritt gleich mit Testdaten (OK/FAIL) testen und in einer Tabelle
 
 # Lösung zum Auftrag
 
-Ich habe es beim lesen leider übersehen, ich werde dennoch das jetzt am ende des Projektes nachholen.
-
 ## Features
-
-1. Als erstes habe ich alle Variablen definert die ich brauchen werde
-2. Danach habe ich ein File gemacht indem man "Einstellungen" machen kann.
-3. Danach habe ich eine kontrolle gemacht, die überprüft ob der User alle Programme/Dependencies hatt die er braucht.
-4. Ich habe die requests an die apis gemacht
-5. Ich bekomme die richtige zahl aus den Json text
-6. Ich rechne die ergebnisse und schreibe sie in records
-7. Ich printe das Resultat ins Terminal aus
 
 | Test  | Feature / Modul        | Testfall-Beschreibung                       | Erwartetes Ergebnis                                            | Testdaten / Input                 |  Status  | Bemerkung                           |
 | :---- | :--------------------- | :------------------------------------------ | :------------------------------------------------------------- | :-------------------------------- | :------: | :---------------------------------- |
